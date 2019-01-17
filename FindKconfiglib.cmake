@@ -5,19 +5,13 @@
 # *                                                            *
 # *************************************************************/
 
-# CMake Package Module for Kconfiglib: https://github.com/ulfalizer/Kconfiglib
+# CMake Find Module for Kconfiglib: https://github.com/ulfalizer/Kconfiglib
+# TODO: Adapt to follow official CMake Style Guide
 cmake_minimum_required(VERSION 3.0.2)
 
-include(ExternalProject)
-
-find_package(Python3 QUIET)
-
-if(NOT ${Python3_FOUND})
-    find_package(Python2 REQUIRED)
-endif()
-
-
-# Inputs
+################################################################
+# Input Variables
+################################################################
 if(NOT DEFINED Kconfiglib_CONFIG_DIR)
     set(Kconfiglib_CONFIG_DIR ${CMAKE_SOURCE_DIR})
 endif()
@@ -34,6 +28,14 @@ if(NOT DEFINED Kconfiglib_HEADER_OUTPUT)
     set(Kconfiglib_HEADER_OUTPUT ${CMAKE_BINARY_DIR})
 endif()
 
+
+include(ExternalProject)
+
+find_package(Python3 QUIET)
+
+if(NOT ${Python3_FOUND})
+    find_package(Python2 REQUIRED)
+endif()
 
 ExternalProject_Add(
     Kconfiglib_Download
@@ -69,10 +71,17 @@ if("${Python2_FOUND}" OR "${Python3_FOUND}")
     add_custom_target(genconfig
         COMMAND ${Python_EXECUTABLE} ${Kconfiglib_Download_SOURCE_DIR}/genconfig.py
             --header-path ${Kconfiglib_HEADER_OUTPUT}/config.h
-            ${Kconfiglib_CONFIG_DIR}/${Kconfiglib_CONFIG_FILENAME})
+            ${Kconfiglib_CONFIG_DIR}/${Kconfiglib_CONFIG_FILENAME}
+    )
 
     # TODO: Support all targets
 endif()
+
+find_package_handle_standard_args(Kconfiglib
+    FOUND_VAR Kconfiglib_FOUND
+    REQUIRED_VARS Python_EXECUTABLE Kconfiglib_Download_SOURCE_DIR
+    # TODO: Versioning
+)
 
 add_dependencies(menuconfig Kconfiglib_Download)
 add_dependencies(genconfig Kconfiglib_Download)
