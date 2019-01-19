@@ -51,15 +51,19 @@ ExternalProject_Add(
 ExternalProject_Get_Property(Kconfiglib_Download SOURCE_DIR)
 
 set(Kconfiglib_Download_SOURCE_DIR ${SOURCE_DIR})
-set(ENV{srctree} ${Kconfiglib_CONFIG_DIR})
-set(ENV{KCONFIG_CONFIG} ${Kconfiglib_DOT_CONFIG_DIR})
+set(Kconfiglib_KCONFIG_CONFIG ${Kconfiglib_DOT_CONFIG_DIR}/.config)
 
 if(${Python3_FOUND})
-    add_custom_target(menuconfig
-        COMMAND ${Python3_EXECUTABLE} ${Kconfiglib_Download_SOURCE_DIR}/menuconfig.py
-            ${Kconfiglib_CONFIG_DIR}/${Kconfiglib_CONFIG_FILENAME}
-    )
     set(Python_EXECUTABLE ${Python3_EXECUTABLE})
+
+    add_custom_target(menuconfig
+        COMMAND
+            ${CMAKE_COMMAND} -E env
+                KCONFIG_CONFIG=${Kconfiglib_KCONFIG_CONFIG}
+                srctree=${Kconfiglib_CONFIG_DIR}
+                ${Python_EXECUTABLE} ${Kconfiglib_Download_SOURCE_DIR}/menuconfig.py
+                ${Kconfiglib_CONFIG_DIR}/${Kconfiglib_CONFIG_FILENAME}
+    )
 endif()
 
 
@@ -69,9 +73,12 @@ if("${Python2_FOUND}" OR "${Python3_FOUND}")
     endif()
 
     add_custom_target(genconfig
-        COMMAND ${Python_EXECUTABLE} ${Kconfiglib_Download_SOURCE_DIR}/genconfig.py
-            --header-path ${Kconfiglib_HEADER_OUTPUT}/config.h
-            ${Kconfiglib_CONFIG_DIR}/${Kconfiglib_CONFIG_FILENAME}
+        COMMAND 
+            ${CMAKE_COMMAND} -E env
+                KCONFIG_CONFIG=${Kconfiglib_KCONFIG_CONFIG}
+                ${Python_EXECUTABLE} ${Kconfiglib_Download_SOURCE_DIR}/genconfig.py
+                --header-path ${Kconfiglib_HEADER_OUTPUT}/config.h
+                ${Kconfiglib_CONFIG_DIR}/${Kconfiglib_CONFIG_FILENAME}
     )
 
     # TODO: Support all targets
